@@ -49,10 +49,8 @@ class SettingsController extends Controller
         $setup = Setting::updateOrCreate(
             [
                 'type' => $request->validated('type'),
-                'user_id' => Auth::id()
             ],
             [
-                'user_id' => Auth::id(),
                 'url' => $request->validated('url'),
                 'api_key' => $request->validated('apiKey'),
                 'is_active' => $request->validated('is_active', true),
@@ -61,6 +59,8 @@ class SettingsController extends Controller
         );
 
         Log::info('Setting saved', ['setup' => $setup]);
+
+        return to_route('settings')->with('success', 'Settings saved.');
     }
 
 }

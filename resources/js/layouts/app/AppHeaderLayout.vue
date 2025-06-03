@@ -2,6 +2,7 @@
 import type { BreadcrumbItemType } from '@/types';
 import { cn } from "@/lib/utils";
 import { ChevronRight, Bell, User } from 'lucide-vue-next';
+import FlashMessages from "@/components/ui/flash/FlashMessages.vue";
 
 interface Props {
     breadcrumbs?: BreadcrumbItemType[];
@@ -44,5 +45,6 @@ withDefaults(defineProps<Props>(), {
                 </button>
             </div>
         </div>
+        <flash-messages />
     </header>
 </template>

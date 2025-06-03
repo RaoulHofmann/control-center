@@ -5,6 +5,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from 'ziggy-js';
+import VueApexCharts from "vue3-apexcharts";
 
 // Extend ImportMeta interface for Vite...
 declare module 'vite/client' {
@@ -28,6 +29,7 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
+            .use(VueApexCharts)
             .mount(el);
     },
     progress: {

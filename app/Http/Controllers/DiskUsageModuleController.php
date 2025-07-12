@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Interfaces\DiskUsage\DiskUsageInterface;
 use App\Models\Module;
 use App\Models\ModuleInstance;
 use App\Models\Setting;
@@ -27,32 +28,28 @@ class DiskUsageModuleController extends Controller
         $data = [];
 
         foreach ($instances as $instance) {
-            // Get the source type from the instance config
             $sourceType = $instance->config['source_type'] ?? null;
 
             if (!$sourceType) {
                 continue;
             }
 
-            // Get the disk space data based on the source type
             $diskSpaceData = $this->fetchDiskSpaceData($sourceType);
 
             if ($diskSpaceData) {
-                // Filter disks based on selected_disks if configured
                 if (isset($instance->config['selected_disks']) && is_array($instance->config['selected_disks']) && !empty($instance->config['selected_disks'])) {
                     $diskSpaceData = array_filter($diskSpaceData, function($disk) use ($instance) {
                         return in_array($disk['path'], $instance->config['selected_disks']);
                     });
                 }
 
-                // Update the cached data for the instance
                 $instance->cached_data = $diskSpaceData;
                 $instance->last_updated_at = now();
                 $instance->save();
 
                 $data[] = [
                     'instance' => $instance,
-                    'disk_space' => array_values($diskSpaceData), // Reset array keys
+                    'disk_space' => array_values($diskSpaceData),
                 ];
             }
         }
@@ -62,8 +59,10 @@ class DiskUsageModuleController extends Controller
 
     /**
      * Fetch disk space data from the specified source.
+     *
+     * @return DiskUsageInterface[]|null
      */
-    private function fetchDiskSpaceData($sourceType)
+    private function fetchDiskSpaceData($sourceType): ?array
     {
         $setting = Setting::where('type', $sourceType)->first();
 
@@ -91,11 +90,9 @@ class DiskUsageModuleController extends Controller
      */
     public function createDiskUsageModule()
     {
-        // Check if the disk usage module already exists
         $module = Module::where('type', 'disk_usage')->first();
 
         if (!$module) {
-            // Create the disk usage module
             $module = Module::create([
                 'name' => 'Disk Usage',
                 'type' => 'disk_usage',
@@ -120,7 +117,6 @@ class DiskUsageModuleController extends Controller
                 ],
             ]);
         } else {
-            // Update the module schema if it doesn't have the selected_disks field
             $configSchema = $module->config_schema;
             if (!isset($configSchema['selected_disks'])) {
                 $configSchema['selected_disks'] = [

@@ -6,6 +6,7 @@ use App\Models\Module;
 use App\Models\ModuleInstance;
 use App\Models\Setting;
 use Illuminate\Database\Seeder;
+use PhpParser\Node\Expr\AssignOp\Mod;
 
 class ModuleSeeder extends Seeder
 {
@@ -14,7 +15,6 @@ class ModuleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create the disk usage module if it doesn't exist
         $module = Module::firstOrCreate(
             ['type' => 'disk_usage'],
             [
@@ -41,6 +41,17 @@ class ModuleSeeder extends Seeder
             ]
         );
 
+        $series = Module::firstOrCreate(
+            ['type' => 'series_list'],
+            [
+                'name' => 'Series List',
+                'description' => 'Displays series list information from Sonarr',
+                'is_active' => true,
+                'config_schema' => null
+            ]
+        );
+
+
         $sonarr = Setting::where('type', 'sonarr')->first();
 
         if ($sonarr) {
@@ -51,11 +62,23 @@ class ModuleSeeder extends Seeder
                 ],
                 [
                     'is_active' => true,
-                    'display_order' => 0,
+                    'display_order' => 1,
                     'config' => [
                         'source_type' => 'sonarr',
-                        'selected_disks' => [],
+                        'selected_disks' => ['/'],
                     ],
+                ]
+            );
+
+            ModuleInstance::firstOrCreate(
+                [
+                    'module_id' => $series->id,
+                    'name' => 'Sonarr Series List',
+                ],
+                [
+                    'is_active' => true,
+                    'display_order' => 0,
+                    'config' => null,
                 ]
             );
         }
@@ -78,5 +101,7 @@ class ModuleSeeder extends Seeder
                 ]
             );
         }
+
+
     }
 }

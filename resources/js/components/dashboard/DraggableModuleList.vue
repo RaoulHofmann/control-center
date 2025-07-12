@@ -2,39 +2,8 @@
 import { ref, computed } from 'vue';
 import draggable from 'vuedraggable';
 import axios from 'axios';
-import DiskUsageChart from './DiskUsageChart.vue';
-import { ModuleConfigSchema } from '@/types';
-
-interface DiskSpace {
-    path: string,
-    freeSpace: number,
-    totalSpace: number
-}
-
-interface Module {
-    id: number,
-    name: string,
-    type: string,
-    description: string,
-    is_active: boolean,
-    config_schema: ModuleConfigSchema,
-    created_at: string,
-    updated_at: string
-}
-
-interface ModuleInstance {
-    id: number,
-    module_id: number,
-    name: string,
-    is_active: boolean,
-    display_order: number,
-    config: any,
-    cached_data: any,
-    last_updated_at: string,
-    created_at: string,
-    updated_at: string,
-    module: Module
-}
+import DiskUsageChart from './modules/DiskUsageChart.vue';
+import {DiskSpace, ModuleInstance} from '@/types';
 
 interface DiskUsageData {
     instance: ModuleInstance,

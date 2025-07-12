@@ -4,18 +4,7 @@ import axios from 'axios';
 import { Loader2 } from 'lucide-vue-next';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { ModuleConfigSchema, FieldSchema } from '@/types';
-
-interface Module {
-    id: number;
-    name: string;
-    type: string;
-    description: string;
-    is_active: boolean;
-    config_schema: ModuleConfigSchema;
-    created_at: string;
-    updated_at: string;
-}
+import { FieldSchema, Module} from '@/types';
 
 interface Props {
     module: Module | null;

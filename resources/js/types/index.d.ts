@@ -4,6 +4,7 @@ import type { Config } from 'ziggy-js';
 
 // Re-export module config types
 export * from './moduleConfig';
+export * from './modules';
 
 export interface Auth {
     user: User;

@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-
-interface DiskSpace {
-    path: string,
-    freeSpace: number,
-    totalSpace: number
-}
+import {DiskSpace} from "@/types";
 
 interface Props {
     disk: DiskSpace;

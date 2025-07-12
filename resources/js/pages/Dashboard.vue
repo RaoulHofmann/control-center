@@ -1,59 +1,29 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import {type BreadcrumbItem, ModuleInstance, Series} from '@/types';
 import { Head } from '@inertiajs/vue3';
 import { ref, Ref } from 'vue';
 import axios from "axios";
 import { onMounted } from "vue";
-import { ModuleConfigSchema } from '@/types';
+import { DiskSpace } from '@/types';
 
-// Import components
 import LoadingState from '@/components/dashboard/LoadingState.vue';
 import ErrorState from '@/components/dashboard/ErrorState.vue';
 import ModuleList from '@/components/dashboard/ModuleList.vue';
-import DiskUsageModule from '@/components/dashboard/DiskUsageModule.vue';
+import DiskUsageModule from '@/components/dashboard/modules/DiskUsageModule.vue';
 import NoDataState from '@/components/dashboard/NoDataState.vue';
 import AddModuleButton from '@/components/dashboard/AddModuleButton.vue';
+import SeriesModule from "@/components/dashboard/modules/SeriesModule.vue";
 
-// Types
-interface DiskSpace {
-    path: string,
-    freeSpace: number,
-    totalSpace: number
-}
-
-interface Module {
-    id: number,
-    name: string,
-    type: string,
-    description: string,
-    is_active: boolean,
-    config_schema: ModuleConfigSchema,
-    created_at: string,
-    updated_at: string
-}
-
-interface ModuleInstance {
-    id: number,
-    module_id: number,
-    name: string,
-    is_active: boolean,
-    display_order: number,
-    config: any,
-    cached_data: any,
-    last_updated_at: string,
-    created_at: string,
-    updated_at: string,
-    module: Module
-}
-
-interface DiskUsageData {
+interface ModuleData {
     instance: ModuleInstance,
-    disk_space: DiskSpace[]
+    disk_space?: DiskSpace[]
+    series?: Series[];
 }
 
-// State
-const diskUsageData: Ref<DiskUsageData[]> = ref([]);
+const diskUsageData: Ref<ModuleData[]> = ref([]);
+const seriesData: Ref<ModuleData[]> = ref([]);
+
 const moduleInstances: Ref<ModuleInstance[]> = ref([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -65,16 +35,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-// Function to ensure the disk usage module exists
-const ensureDiskUsageModule = async () => {
-    try {
-        await axios.post('/modules/disk-usage/create');
-    } catch (err) {
-        console.error('Failed to create disk usage module:', err);
-    }
-};
-
-// Function to fetch module instances
 const fetchModuleInstances = async () => {
     try {
         const response = await axios.get('/modules/instances');
@@ -87,20 +47,11 @@ const fetchModuleInstances = async () => {
     }
 };
 
-// Function to fetch disk usage data
 const fetchDiskUsageData = async () => {
     try {
         const response = await axios.get('/modules/disk-usage/data');
         if (response.status === 200) {
             diskUsageData.value = response.data;
-
-            // Update the cached_data for each module instance
-            response.data.forEach((data: DiskUsageData) => {
-                const instance = moduleInstances.value.find(mi => mi.id === data.instance.id);
-                if (instance) {
-                    instance.cached_data = data.disk_space;
-                }
-            });
         }
     } catch (err) {
         console.error('Failed to fetch disk usage data:', err);
@@ -108,9 +59,27 @@ const fetchDiskUsageData = async () => {
     }
 };
 
-// Function to get disk space data for a module instance
+const fetchSeriesData = async () => {
+    try {
+        const response = await axios.get('/modules/series/data');
+        if (response.status === 200) {
+            seriesData.value = response.data;
+        }
+    } catch (err) {
+        console.error('Failed to fetch series data:', err);
+        error.value = 'Failed to fetch series data';
+    }
+};
+
 const getDiskSpaceForModule = (moduleInstance: ModuleInstance): DiskSpace[] => {
     if (moduleInstance.module.type === 'disk_usage' && Array.isArray(moduleInstance.cached_data)) {
+        return moduleInstance.cached_data;
+    }
+    return [];
+};
+
+const getSeriesForModule = (moduleInstance: ModuleInstance): Series[] => {
+    if (moduleInstance.module.type === 'series_list' && Array.isArray(moduleInstance.cached_data)) {
         return moduleInstance.cached_data;
     }
     return [];
@@ -121,9 +90,10 @@ const addModuleInstance = (moduleInstance: ModuleInstance) => {
         moduleInstances.value = [...moduleInstances.value, moduleInstance];
     }
 
-    // If it's a disk usage module, fetch the disk usage data
     if (moduleInstance.module.type === 'disk_usage') {
         fetchDiskUsageData();
+    } else if (moduleInstance.module.type === 'series_list') {
+        fetchSeriesData();
     }
 };
 
@@ -132,11 +102,17 @@ onMounted(async () => {
     error.value = null;
 
     try {
-        await ensureDiskUsageModule();
         await fetchModuleInstances();
 
-        if (moduleInstances.value.some(mi => mi.module.type === 'disk_usage')) {
+        const hasDiskUsageModules = moduleInstances.value.some(mi => mi.module.type === 'disk_usage');
+        const hasSeriesModules = moduleInstances.value.some(mi => mi.module.type === 'series_list');
+
+        if (hasDiskUsageModules) {
             await fetchDiskUsageData();
+        }
+
+        if (hasSeriesModules) {
+            await fetchSeriesData();
         }
     } catch (err) {
         console.error('Error initializing dashboard:', err);
@@ -178,6 +154,7 @@ onMounted(async () => {
                             :module-instance="moduleInstance"
                             :disk-space="getDiskSpaceForModule(moduleInstance)"
                         />
+                        <SeriesModule v-if="moduleInstance.module.type === 'series_list'" :module-instance="moduleInstance" :series="getSeriesForModule(moduleInstance)" />
                     </template>
                 </ModuleList>
             </div>

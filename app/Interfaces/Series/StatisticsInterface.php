@@ -1,0 +1,56 @@
+<?php
+// AI GENERATED
+
+namespace App\Interfaces\Series;
+
+interface StatisticsInterface
+{
+    /**
+     * Get the season count.
+     *
+     * @return int
+     */
+    public function getSeasonCount(): int;
+
+    /**
+     * Get the episode file count.
+     *
+     * @return int
+     */
+    public function getEpisodeFileCount(): int;
+
+    /**
+     * Get the episode count.
+     *
+     * @return int
+     */
+    public function getEpisodeCount(): int;
+
+    /**
+     * Get the total episode count.
+     *
+     * @return int
+     */
+    public function getTotalEpisodeCount(): int;
+
+    /**
+     * Get the size on disk.
+     *
+     * @return int
+     */
+    public function getSizeOnDisk(): int;
+
+    /**
+     * Get the release groups.
+     *
+     * @return array<string>
+     */
+    public function getReleaseGroups(): array;
+
+    /**
+     * Get the percent of episodes.
+     *
+     * @return float
+     */
+    public function getPercentOfEpisodes(): float;
+}
